@@ -1,0 +1,10 @@
+.DS_Store
+build/
+dist/
+tmp/
+*.log
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.app
+*.zip
