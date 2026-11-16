@@ -27,17 +27,21 @@ To quit temporarily, choose `Quit` from the `Pet Meter` menu. To reopen it, open
 - Size behavior: the rings automatically resize with Codex Pet
 - Fine tuning: hover over the food bowl, then drag the small bar below it to adjust the ring scale
 
-The percentages are remaining capacity, not used capacity.
+The percentages are remaining capacity, not used capacity. For a recognized personal Pro plan, a valid live weekly response without a 5-hour window or conflicting/malformed windows can show a full pastel rainbow and `5h No Limit`, with `5h ---` for reset. A real 5-hour window takes priority; weekly remaining is independent. Unknown periods appear gray with `—`. After a refresh failure, the last same-account success may be shown as Cached in memory for up to 300 seconds; passed reset periods become unknown.
 
 Sample image:
 
 ![Codex Pet Meter sample](docs/assets/pet-meter-sample.png)
 
-The image uses sample percentages and reset times. It also shows the fine-tuning bar that appears below the food bowl on hover.
+This normal example uses fictional percentages and reset times and shows the fine-tuning bar below the food bowl on hover.
+
+![Synthetic Pro No Limit overlay example](docs/assets/pet-meter-pro-no-limit-sample.png)
+
+This overlay-only Pro example uses fictional values and a fictional date. It does not show a pet or the fine-tuning bar.
 
 ## Requirements
 
-- macOS
+- macOS 13 or later (tested on macOS 27.0.1; older versions have not been runtime-tested)
 - Xcode Command Line Tools
 - Codex desktop app
 - Codex Pet enabled and visible
@@ -114,20 +118,21 @@ This removes the login item, `~/Applications/CodexPetHungerMeter.app`, and the a
 
 ## Packaged ZIP
 
-This repository can also create a distributable ZIP containing the built app:
+After building the app, create a distributable ZIP from that verified app bundle:
 
 ```bash
-scripts/package-release.sh
+scripts/package-release.sh --app "$PWD/build/CodexPetHungerMeter.app"
 ```
 
-The ZIP is written to `dist/`. Generated app bundles and ZIP files are not committed to Git.
+The source ZIP from GitHub contains the scripts above; the release app ZIP is a separate download, `codex-pet-meter-0.1.1-macos-arm64.zip`, with a SHA-256 checksum. The prebuilt app targets Apple silicon and macOS 13 or later; no Intel prebuilt is provided. It is ad-hoc signed, not Developer ID signed or notarized. Generated app bundles and ZIP files are not committed to Git.
 
 ## Guides
 
 - Japanese guide: [docs/user-guide.ja.md](docs/user-guide.ja.md)
 - English guide: [docs/user-guide.en.md](docs/user-guide.en.md)
 - Security notes: [SECURITY.md](SECURITY.md)
-- Disclaimer: [DISCLAIMER.md](DISCLAIMER.md)
+- Disclaimer: [DISCLAIMER.md](https://github.com/GrShin5/codex-pet-meter/blob/main/DISCLAIMER.md)
+- License: [LICENSE](https://github.com/GrShin5/codex-pet-meter/blob/main/LICENSE)
 
 ## Development
 
@@ -149,7 +154,7 @@ Verify:
 tools/verify-hunger-meter.sh
 ```
 
-The verifier builds the app, checks cached usage parsing, and creates `build/hunger-meter-preview.png`.
+The verifier builds the app and runs deterministic self-tests and synthetic previews without authentication, network access, real logs, or preference writes. See [release QA](docs/qa/v0.1.1.md) for the recorded results.
 
 ---
 
@@ -182,17 +187,21 @@ tools/install-hunger-meter.sh
 - サイズ追従: リングはCodex Petのサイズ変更に自動で追従
 - 微調整: フードボウルにカーソルを合わせ、下に出る小さなバーをドラッグしてリングサイズを調整
 
-表示されるパーセントは「使用済み」ではなく「残量」です。
+表示されるパーセントは「使用済み」ではなく「残量」です。認識済みの個人Proプランで、有効なライブWeeklyがあり、5時間枠がなく、不正または矛盾する枠もない場合、内側は全周パステル虹色の `5h No Limit`、リセットは `5h ---` と表示されます。実際の5時間枠は優先され、Weekly残量は独立しています。不明な期間は灰色と `—` です。更新失敗時は同一アカウントの直近成功結果をメモリ内で最大300秒Cached表示でき、リセット時刻を過ぎた期間は不明になります。
 
 サンプル画像:
 
 ![Codex Pet Meter sample](docs/assets/pet-meter-sample.png)
 
-画像内のパーセントとリセット時刻はサンプル値です。フードボウルにホバーしたときに下へ表示される微調整バーも示しています。
+通常例のパーセントと日時は架空の値です。フードボウルにホバーすると下に表示される微調整バーも示しています。
+
+![架空のPro No Limitオーバーレイ例](docs/assets/pet-meter-pro-no-limit-sample.png)
+
+このPro例は架空の値と日時を使ったオーバーレイのみの画像です。Petと微調整バーは表示していません。
 
 ## 必要なもの
 
-- macOS
+- macOS 13以降（macOS 27.0.1で検証。旧バージョンの実行は未検証）
 - Xcode Command Line Tools
 - Codexデスクトップアプリ
 - Codex Petが有効で画面に表示されていること
@@ -269,20 +278,21 @@ tools/uninstall-hunger-meter.sh
 
 ## 配布用ZIP
 
-このリポジトリでは、ビルド済みアプリを含む配布用ZIPも作成できます。
+ビルド後、検証済みアプリから配布用ZIPを作成できます。
 
 ```bash
-scripts/package-release.sh
+scripts/package-release.sh --app "$PWD/build/CodexPetHungerMeter.app"
 ```
 
-ZIPは `dist/` に作成されます。生成されたアプリ本体やZIPファイルはGitにはコミットしません。
+GitHubのソースZIPには上記スクリプトが入っています。リリースのアプリZIPは別の `codex-pet-meter-0.1.1-macos-arm64.zip` で、SHA-256チェックサムが付属します。ビルド済みアプリはApple silicon・macOS 13以降向けで、Intel版はありません。ad-hoc署名であり、Developer ID署名・公証はされていません。生成されたアプリやZIPはGitにはコミットしません。
 
 ## ガイド
 
 - 日本語ガイド: [docs/user-guide.ja.md](docs/user-guide.ja.md)
 - 英語ガイド: [docs/user-guide.en.md](docs/user-guide.en.md)
 - セキュリティ説明: [SECURITY.md](SECURITY.md)
-- 免責事項: [DISCLAIMER.md](DISCLAIMER.md)
+- 免責事項: [DISCLAIMER.md](https://github.com/GrShin5/codex-pet-meter/blob/main/DISCLAIMER.md)
+- ライセンス: [LICENSE](https://github.com/GrShin5/codex-pet-meter/blob/main/LICENSE)
 
 ## 開発
 
@@ -304,4 +314,4 @@ tools/run-hunger-meter.sh
 tools/verify-hunger-meter.sh
 ```
 
-検証スクリプトはアプリをビルドし、キャッシュされた使用量解析を確認し、`build/hunger-meter-preview.png` を作成します。
+検証スクリプトはアプリをビルドし、認証・通信・実ログ・設定書き込みを使わず固定データの自己テストと画像を生成します。結果は[リリース検証](docs/qa/v0.1.1.md)を参照してください。

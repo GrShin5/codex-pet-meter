@@ -13,6 +13,10 @@ export TMPDIR="/private/tmp/codex-pet-hunger-meter-tmp"
 mkdir -p "$CLANG_MODULE_CACHE_PATH" "$TMPDIR"
 
 swiftc "$ROOT_DIR/tools/codex-pet-hunger-meter.swift" \
+  -target "$(uname -m)-apple-macos13.0" \
+  -file-prefix-map "$ROOT_DIR=/src" \
+  -debug-prefix-map "$ROOT_DIR=/src" \
+  -gnone \
   -o "$BIN_PATH" \
   -framework AppKit \
   -lsqlite3
@@ -44,9 +48,9 @@ cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>0.1.1</string>
   <key>CFBundleVersion</key>
-  <string>1</string>
+  <string>2</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>LSUIElement</key>
@@ -54,5 +58,11 @@ cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
+
+# Sign the assembled bundle so its resource seal matches the final plist and images.
+codesign --force --sign - "$APP_DIR"
+codesign --verify --deep --strict "$APP_DIR"
+# Signing mutates the executable; CLI verification must exercise these exact bytes.
+cp "$APP_DIR/Contents/MacOS/codex-pet-hunger-meter" "$BIN_PATH"
 
 echo "Built: $APP_DIR"
