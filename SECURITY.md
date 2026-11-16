@@ -1,15 +1,19 @@
 # Security and Privacy
 
-Codex Pet Meter is designed as a local macOS companion overlay for personal use.
+Codex Pet Hunger Meter is designed as a local-only companion overlay for personal use.
 
 ## What It Reads
 
 - `~/.codex/.codex-global-state.json`
-  - Used to find whether Codex Pet is open, where it is on screen, and the current pet size.
+  - Read only to find whether Codex Pet is open, its saved geometry, and the active owner’s pet-width override.
+- macOS on-screen window metadata
+  - Read only owner PID, layer and bounds for the running Codex app to resolve a unique supported single-screen pet window. No window titles, screenshots, accessibility input or process attachment are used.
+- `~/.codex/config.toml`
+  - Read only to resolve the numeric `[desktop]` pet width setting. Other configuration values are not exposed.
 - `~/.codex/auth.json`
   - Used only in memory to call the live ChatGPT usage endpoint.
 - `~/.codex/logs_2.sqlite`
-  - Used as a local fallback when live usage cannot be refreshed.
+  - Read only by the explicit `--status --cached-only` legacy diagnostic. Never used by the overlay.
 
 ## What It Does Not Do
 
@@ -17,8 +21,8 @@ Codex Pet Meter is designed as a local macOS companion overlay for personal use.
 - It does not modify Codex Pet assets.
 - It does not modify Codex Pet size settings.
 - It does not import, export, paste, or print auth tokens.
-- It does not store usage responses.
-- It does not save screenshots.
+- It does not persist usage responses.
+- The running overlay does not save screenshots. Explicit `--preview` writes only synthetic fixture images.
 - It does not transmit local logs or pet position data.
 
 ## What It Saves
@@ -28,18 +32,18 @@ Codex Pet Meter is designed as a local macOS companion overlay for personal use.
 
 ## Network Behavior
 
-The app attempts live usage refreshes against the ChatGPT usage endpoint using the same local Codex OAuth token already used by Codex. If a request fails, the app falls back to local logs.
+The app attempts live usage refreshes against the ChatGPT usage endpoint using only the local Codex access token. It validates HTTP status and transport success. On failure, it can reuse the last successful response held in memory for the same account for up to 300 seconds. A period becomes unknown once its reset time passes; expired data is never shown as live. Account changes clear the previous success. No usage cache or account identity is persisted.
 
-For privacy and predictability, live refresh uses a fixed interval and does not start a rapid retry loop after failures.
+For privacy and predictability, live refresh uses a 20-second interval and refreshes on wake; overlapping requests coalesce. It does not start a rapid retry loop after failures.
 
-You can verify the cached, no-network path at any time:
+An optional, unverified legacy log diagnostic (account identity unknown) is available without network access:
 
 ```bash
 tools/build-hunger-meter.sh
 build/codex-pet-hunger-meter --status --cached-only
 ```
 
-This prints only the plan name, source, reset times, and remaining percentages. It does not print tokens or raw log rows.
+This prints only safe usage summaries and timestamps. Legacy logs never establish No Limit. It does not print tokens or raw log rows.
 
 ## Uninstall
 
@@ -59,57 +63,20 @@ This removes:
 
 # セキュリティとプライバシー
 
-Codex Pet Meter は、個人利用向けのローカルmacOS補助オーバーレイとして設計されています。
+このアプリは個人利用向けのローカル補助オーバーレイです。CodexやPet画像、Petサイズ設定は変更しません。
 
-## 読み取るもの
+## 読み取る情報
 
-- `~/.codex/.codex-global-state.json`
-  - Codex Pet が開いているか、画面上の位置、現在のPetサイズを確認するために使います。
-- `~/.codex/auth.json`
-  - ライブのChatGPT使用量エンドポイントを呼び出すため、メモリ上でのみ使います。
-- `~/.codex/logs_2.sqlite`
-  - ライブ使用量を更新できない場合のローカルフォールバックとして使います。
+- `~/.codex/.codex-global-state.json`: Petの表示状態、保存位置とサイズ、アクティブな所有元の幅設定を読み取ります。
+- macOSの画面上のウィンドウメタデータ: 対象の所有プロセス、レイヤー、矩形だけを使い、対応する単一画面のPet位置を解決します。タイトル、画像、アクセシビリティ操作、プロセス接続は使いません。
+- `~/.codex/config.toml`: `[desktop]` のPet幅を読み取ります。他の設定値は公開しません。
+- `~/.codex/auth.json`: ライブ使用量取得のためトークンをメモリ内で読み取ります。
+- `~/.codex/logs_2.sqlite`: 明示的な `--status --cached-only` 旧ログ診断だけが読みます。画面表示には使用しません。
 
-## 行わないこと
+## 保存と通信
 
-- Codex本体は変更しません。
-- Codex Petの画像素材は変更しません。
-- Codex Petのサイズ設定は変更しません。
-- 認証トークンをインポート、エクスポート、貼り付け、表示しません。
-- 使用量レスポンスは保存しません。
-- スクリーンショットは保存しません。
-- ローカルログやPet位置データは送信しません。
+表示のON/OFFとリングの微調整値を保存します。使用量レスポンス、Petの位置履歴、通常動作中のスクリーンショットは保存せず、ローカルログやPet位置を送信しません。明示的なプレビューは架空データ画像を書き出します。トークンは表示・コピー・保存せず、HTTPSの使用量取得に使用します。
 
-## 保存するもの
+ライブ取得は20秒ごととスリープ復帰時に行い、重複要求をまとめます。失敗時は同じアカウントの直近成功結果をメモリ内で最大300秒再利用できます。リセット時刻を過ぎた期間は不明とし、アカウント変更時は破棄します。永続使用量キャッシュや自動ログ切り替えはありません。
 
-- オーバーレイを表示するか非表示にするかの設定
-- フードボウル下のサイズバーで選択したリングサイズの微調整値
-
-## ネットワーク動作
-
-このアプリは、Codexがすでに使用しているローカルのCodex OAuthトークンを使って、ChatGPT使用量エンドポイントにライブ更新を試みます。失敗した場合は、ローカルログにフォールバックします。
-
-プライバシーと予測しやすさのため、ライブ更新は固定間隔で行い、失敗後に高速な再試行ループは開始しません。
-
-キャッシュのみを使う、ネットワークなしの経路はいつでも確認できます。
-
-```bash
-tools/build-hunger-meter.sh
-build/codex-pet-hunger-meter --status --cached-only
-```
-
-このコマンドが表示するのは、プラン名、データ取得元、リセット時刻、残量パーセントだけです。トークンや生のログ行は表示しません。
-
-## アンインストール
-
-次を実行します。
-
-```bash
-tools/uninstall-hunger-meter.sh
-```
-
-これにより次のものが削除されます。
-
-- ログイン項目のLaunchAgent
-- `~/Applications/CodexPetHungerMeter.app` にあるインストール済みアプリ本体
-- アプリ設定ドメイン `com.codex-pet.hunger-meter`
+旧ログ診断はネットワークを使いませんが、アカウント一致は未確認で、No Limitの根拠にはなりません。使用量の要約と時刻のみを表示し、トークンや生ログ行は表示しません。アンインストールは `tools/uninstall-hunger-meter.sh` を実行してください。ログイン項目、インストール済みアプリ、アプリ設定を削除します。

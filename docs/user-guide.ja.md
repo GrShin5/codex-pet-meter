@@ -1,67 +1,49 @@
-# Codex Pet Meter ユーザーガイド
+# Codex Pet Hunger Meter ユーザーガイド
 
-Codex Pet Meter は、Codex Pet の周りに使用量の残量リングを表示するmacOS用の非公式補助アプリです。
+Codex Pet Hunger Meter は、Codex Pet の周囲に使用量の残量リングを重ねて表示するmacOS用のローカル補助ツールです。Codex本体やPet画像は変更せず、Codexのローカル状態と使用量情報を読んで透明なオーバーレイを描画します。
 
-Codex本体やCodex Petの画像は変更しません。自分のMac上にあるCodexの状態と使用量情報を読み、Petに追従する透明なオーバーレイを表示します。
+## 1. 事前条件
 
-## 1. 事前に必要なもの
-
-- macOS
-- Codexデスクトップアプリ
-- Codex Petが画面に表示されていること
+- macOS 13以降（macOS 27.0.1で検証。旧バージョンの実行は未検証）
 - Xcode Command Line Tools
-- このリポジトリのフォルダ
+- Codexデスクトップアプリ
+- Codex Pet が有効で、画面上に表示されていること
+- このリポジトリのルートでコマンドを実行すること
 
-Xcode Command Line Toolsが入っていない場合は、Terminalで次を実行してください。
+## 2. 起動方法
+
+一時的に起動する場合:
 
 ```bash
-xcode-select --install
+tools/run-hunger-meter.sh
 ```
 
-## 2. インストール
+このコマンドは毎回ビルドしてから、`build/CodexPetHungerMeter.app` 内の実行ファイルを起動します。動作確認や開発中の利用に向いています。
 
-Terminalでこのフォルダを開き、次を実行します。
+終了するには、macOSメニューバーの `Pet Meter` メニューから `Quit` を選びます。
+
+## 3. インストール
+
+ログイン時に自動起動する常用アプリとして入れる場合:
 
 ```bash
 tools/install-hunger-meter.sh
 ```
 
-インストールすると、次が行われます。
+このスクリプトは次を行います。
 
 - アプリをビルドする
 - `~/Applications/CodexPetHungerMeter.app` にコピーする
 - `~/Library/LaunchAgents/com.codex-pet.hunger-meter.plist` を作成する
-- すぐにアプリを起動する
+- `launchctl` でLaunchAgentを読み込み、すぐ起動する
 - 標準出力ログを `/tmp/codex-pet-hunger-meter.out.log` に出す
 - エラーログを `/tmp/codex-pet-hunger-meter.err.log` に出す
 
-起動すると、macOSのメニューバーに `Pet Meter` が表示されます。インストール後はmacOSログイン時にも自動起動します。
+インストール後は、macOSログイン時に自動起動します。
 
-## 3. 終了と再起動
+Quit後にもう一度起動したい場合は、Finderで `ホーム > Applications > CodexPetHungerMeter.app` を開くか、Spotlightで `Pet Meter` と検索して起動してください。起動するとDockには残らず、macOSメニューバーに `Pet Meter` が戻ります。
 
-一時的に止める場合は、メニューバーの `Pet Meter` から `Quit` を選びます。
-
-もう一度起動する場合は、Finderで `ホーム > Applications > CodexPetHungerMeter.app` を開くか、Spotlightで `Pet Meter` と検索してください。このアプリはDockには残りません。起動すると、macOSメニューバーに `Pet Meter` が戻ります。
-
-## 4. 更新方法
-
-Gitでインストールした場合:
-
-```bash
-cd codex-pet-meter
-git pull
-tools/install-hunger-meter.sh
-```
-
-ZIPでダウンロードした場合は、GitHubから最新ZIPをもう一度ダウンロードして解凍し、新しいフォルダでTerminalを開いて次を実行します。
-
-```bash
-tools/install-hunger-meter.sh
-```
-
-インストーラを再実行すると、`~/Applications/CodexPetHungerMeter.app` が置き換わり、ログイン時自動起動の設定も読み込み直されます。
-
-## 5. アンインストール
+## 4. アンインストール
 
 インストール済みアプリと自動起動設定を削除する場合:
 
@@ -69,73 +51,98 @@ tools/install-hunger-meter.sh
 tools/uninstall-hunger-meter.sh
 ```
 
-この操作で削除されるもの:
+このスクリプトは次を削除します。
 
 - `~/Library/LaunchAgents/com.codex-pet.hunger-meter.plist`
 - `~/Applications/CodexPetHungerMeter.app`
-- アプリ設定ドメイン `com.codex-pet.hunger-meter`
+- アプリ設定 `com.codex-pet.hunger-meter`
 
 Codex本体、Codex Pet、`~/.codex/auth.json`、`~/.codex/logs_2.sqlite` は削除・変更しません。
 
-## 6. 表示の見方
+## 5. ON / OFF の切り替え
 
-- 外側リング: Weeklyリミットの残量
-- 内側リング: 5時間リミットの残量
-- 上部表示: リセット時刻
-- フードボウル: クリックすると手動更新
-
-表示されるパーセントは「使用済み」ではなく「残量」です。内部APIやローカルログの `used_percent` を `100 - used_percent` に変換して表示しています。
-
-## 7. サイズ調整
-
-リングの基本サイズは、現在のCodex Petのサイズに自動で追従します。
-
-微調整したい場合は、フードボウル画像の上にカーソルを合わせてください。フードボウルの下に小さなバーが表示されます。このバーを左右にドラッグすると、Petサイズに対するリングの大きさを調整できます。調整値はアプリ設定に保存され、次回起動時にも引き継がれます。
-
-フードボウル画像のクリックによる手動更新は従来通りです。バーをドラッグしている間だけ、サイズ調整操作として扱われます。
-
-## 8. メニュー
-
-`Pet Meter` メニューでは次を操作・確認できます。
+アプリ起動中は、macOSメニューバーに `Pet Meter` が表示されます。
 
 - `Hide Hunger Meter`: オーバーレイを非表示にする
 - `Show Hunger Meter`: オーバーレイを再表示する
 - `Refresh Now`: 使用量とリセット時刻を手動更新する
-- `Outer Weekly`: 外側リングと同じWeekly残量
-- `Inner 5h`: 内側リングと同じ5時間残量
-- `Weekly Reset`: Weeklyリセット日時
-- `5h Reset`: 5時間リセット時刻
-- `Data Updated`: 表示中データを取得した時刻
-- `Data Source`: `Live` / `Cached` / `Unavailable`
 - `Quit`: アプリを終了する
 
-`Hide Hunger Meter` は表示だけをOFFにします。アプリ自体は終了しません。
+`Hide Hunger Meter` は表示だけをOFFにします。アプリ自体は終了しません。表示状態はアプリ設定に保存され、次回起動時にも引き継がれます。
 
-## 9. マウス操作
+完全に停止したい場合は `Quit` を選んでください。ログイン時自動起動も止めたい場合は `tools/uninstall-hunger-meter.sh` を実行してください。
+
+## 6. 表示の見方
+
+### リング
+
+- 外側リング: Weeklyリミットの残量
+- 内側リング: 5hリミットの残量
+- リングが長いほど残量が多い
+- リングが短いほど残量が少ない
+
+認識済みの個人Proプランで、ライブ取得したWeeklyが有効・5hウィンドウなし・不正または矛盾するウィンドウなしの場合、`5h No Limit` を静止した全周パステル虹色リングで表示し、リセット欄は `5h ---` になります。実際の5hウィンドウがある場合はその値を優先します。不明な期間は灰色と `—` で表示し、0%とは扱いません。
+
+表示されるパーセントは「使用率」ではなく「残量」です。ライブAPIの `used_percent` を `100 - used_percent` に変換して表示しています。
+
+### 情報バッヂ
+
+- `Weekly 82%` のような表示: Weeklyリミット残量
+- `5h 83%` のような表示: 5hリミット残量
+- 上部の `W yyyy/MM/dd HH:mm`: Weeklyリミットのリセット日時
+- 上部の `5h HH:mm`: 5hリミットのリセット時刻
+
+日時はローカルタイムで表示されます。
+
+### サイズ調整
+
+リングの基本サイズは、現在のCodex Petのサイズに自動で追従します。
+
+微調整したい場合は、餌箱画像の上にカーソルを合わせてください。餌箱の下に小さなバーが表示されます。このバーを左右にドラッグすると、Petサイズに対するリングの大きさを調整できます。調整値はアプリ設定に保存され、次回起動時にも引き継がれます。
+
+餌箱画像のクリックによる手動更新は従来通りです。バーをドラッグしている間だけ、サイズ調整操作として扱われます。
+
+### メニューの情報
+
+`Pet Meter` メニューには次の状態が表示されます。
+
+- `Outer Weekly`: 外側リングと同じWeekly残量
+- `Inner 5h`: 内側リングと同じ5h残量
+- `Weekly Reset`: Weeklyリセット日時
+- `5h Reset`: 5hリセット時刻
+- `Last Success`: 最後にライブ取得が成功した時刻
+- `Data Source`: `Live` / `Cached` / `Unavailable`
+
+`Data Source` の意味:
+
+- `Live`: ChatGPT usage endpoint から直接取得した最新データ
+- `Cached`: 同じアカウントの直近の成功結果をメモリ上で一時利用中（最大300秒。リセット時刻を過ぎた期間は不明）
+- `Unavailable`: 利用可能な結果がない状態。不明な期間は灰色のリングと `—` を表示
+
+## 7. 更新タイミング
+
+通常は20秒ごとに自動更新し、macOSのスリープ復帰時にも取得します。重複した更新要求はまとめて実行し、アカウントが変わると以前の成功結果を破棄します。
+
+自動更新では、リングやバッヂを一度消すアニメーションは使いません。表示中の数値やリング量だけが更新されます。
+
+手動更新する方法:
+
+- 餌箱画像をクリックする
+- メニューバーの `Pet Meter` から `Refresh Now` を選ぶ
+
+手動更新では、更新操作が分かりやすいように短いアニメーションが再生されます。リングが軽く再充填され、情報バッヂがフェードインします。餌箱画像は消えません。
+
+## 8. マウス操作
 
 オーバーレイは基本的にマウス入力を背面のCodex Petやチャット欄へ通します。
 
-例外は、フードボウル画像と、サイズバーが表示されている間のサイズバー部分だけです。フードボウルをクリックすると使用量データを手動更新します。サイズバーをドラッグするとリングサイズを調整します。それ以外の場所では入力を背面へ通します。
+例外は餌箱画像の上だけです。餌箱上ではクリックを受け取り、使用量情報を手動更新します。
+
+餌箱の上にカーソルを合わせてサイズ調整バーが出ている間は、餌箱とバーの部分だけマウス操作を受け取ります。それ以外の場所では、これまで通り背面のCodex Petやチャット欄へ入力を通します。
 
 もしPetをドラッグできない、チャット入力ができない場合は、古い起動中プロセスが残っている可能性があります。`Pet Meter` メニューから `Quit` して、再度起動してください。
 
-## 10. Codexにインストールを任せる場合
-
-Terminal操作に慣れていない場合は、CodexにこのリポジトリURLを渡して、セットアップを依頼できます。
-
-コピー用プロンプト:
-
-```text
-以下のリポジトリから、macOS用のCodex Pet Meterをインストールしてセットアップしてください。
-
-https://github.com/GrShin5/codex-pet-meter
-
-まずREADMEを確認し、このリポジトリだけを使ってインストールしてください。各手順を初心者にも分かる言葉で説明し、可能であれば検証スクリプトも実行してください。ローカルのトークンやCodexアカウント関連ファイルは、表示・コピー・アップロードしないでください。
-```
-
-Codexには、リポジトリのダウンロードまたはclone、`tools/install-hunger-meter.sh` の実行、メニューバーに `Pet Meter` が表示されたことの確認、アンインストール方法の説明まで依頼してください。
-
-## 11. ステータス確認とプレビュー
+## 9. ステータス確認
 
 アプリを開かずに現在の解析結果を見る場合:
 
@@ -144,7 +151,7 @@ tools/build-hunger-meter.sh
 build/codex-pet-hunger-meter --status
 ```
 
-ネットワークを使わず、ローカルキャッシュだけを確認する場合:
+ネットワークを使わない任意の旧ログ診断（アカウント一致は未確認。画面表示には使用しません）:
 
 ```bash
 tools/build-hunger-meter.sh
@@ -155,32 +162,31 @@ build/codex-pet-hunger-meter --status --cached-only
 
 ```bash
 tools/build-hunger-meter.sh
-build/codex-pet-hunger-meter --preview build/hunger-meter-preview.png --size 180
+build/codex-pet-hunger-meter --preview build/hunger-meter-preview.png --preview-fixture pro-no-limit --size 180 --side right --adjustment 1.0
 ```
 
 プレビューの `--size` はCodex Petの幅として扱われます。Codex Pet側の現在のリサイズ範囲はおおよそ `80`〜`224` px です。
 
-## 12. データと安全性
+## 10. データ取得とプライバシー
 
-ライブ取得では、`~/.codex/auth.json` のCodex OAuthトークンをメモリ上で読み、ChatGPT usage endpointにアクセスします。
+ライブ取得では、`~/.codex/auth.json` のCodex OAuthトークンをメモリ上で読み、ChatGPT usage endpoint `/backend-api/wham/usage` にアクセスします。
 
-ライブ取得に失敗した場合は、`~/.codex/logs_2.sqlite` のローカルログから使用量イベントだけを読みます。
+ライブ取得に失敗した場合は、同じアカウントの成功結果をメモリ上で最大300秒だけ再利用します。リセット時刻を過ぎた期間は不明にします。使用量の永続キャッシュや、自動的な旧ログへの切り替えはありません。
 
 このツールは次を行いません。
 
 - Codex本体の変更
 - Codex Pet画像の変更
-- Codex Petのサイズ設定変更
-- トークンの出力・保存・外部送信
+- トークンの出力・保存（access tokenはHTTPSのusage endpointへの認証にのみ送信）
 - usageレスポンスの保存
-- スクリーンショット保存
+- 通常動作中のスクリーンショット保存（明示的なプレビューは架空データの画像を保存）
 - Pet位置履歴の保存
 
 保存されるアプリ設定は、表示ON/OFFとリングサイズの微調整値だけです。
 
-詳細は [SECURITY.md](../SECURITY.md) を参照してください。
+詳細は `SECURITY.md` を参照してください。
 
-## 13. トラブルシュート
+## 11. トラブルシュート
 
 ### 表示されない
 
@@ -190,9 +196,9 @@ build/codex-pet-hunger-meter --preview build/hunger-meter-preview.png --size 180
 
 ### 情報が古い
 
-- `Pet Meter` メニューの `Data Source` と `Data Updated` を確認してください。
-- `Cached` の場合、ライブ取得に失敗してローカルログの値を使っています。
-- `Refresh Now` またはフードボウルクリックで手動更新してください。
+- `Pet Meter` メニューの `Data Source` と `Last Success` を確認してください。
+- `Cached` の場合、ライブ取得に失敗し、同じアカウントの直近の成功結果を一時利用しています。小さな `Cached HH:mm` バッヂでも時刻を表示します。
+- `Refresh Now` または餌箱クリックで手動更新してください。
 
 ### 自動起動しない
 
@@ -209,12 +215,15 @@ tail -n 100 /tmp/codex-pet-hunger-meter.err.log
 tail -n 100 /tmp/codex-pet-hunger-meter.out.log
 ```
 
-## 14. 配布ZIPを作る場合
-
-配布用ZIPを作る場合は次を実行します。
+### 完全に消したい
 
 ```bash
-scripts/package-release.sh
+tools/uninstall-hunger-meter.sh
 ```
 
-生成されたZIPは `dist/` に入ります。
+開発側の検証は `tools/verify-hunger-meter.sh` で実行できます。認証・通信・実ログ・設定書き込みを使わず、固定データの自己テストとPNGを生成します。固定データは `normal` / `pro-no-limit` / `unknown` / `cached`。`--anchor-status` はPet位置と画面・配置の安全な診断だけを出力します。現在のx/y形式と旧mascotオフセット形式に対応し、幅はアクティブな所有元のPet設定、`~/.codex/config.toml` の `[desktop]`、既定112pxの順に解決し、80〜224pxへ丸めて追従します。高さは現在の192:208比率から算出します。各ファイルの変更を別々に検知するため、サイズ設定の保存完了後に再起動なしで反映されます。一時的な読み取り失敗・書きかけ設定では直前の幅を維持し、有効なResetでは既定幅へ戻ります。旧形式の明示的なmascot寸法も維持します。
+
+現在のPetの中央合わせは、画面が1枚で、CodexのPetウィンドウがソース由来の物理レイアウトと一意に一致する場合、所有プロセス・レイヤー・矩形の読み取り専用メタデータから実際の中心を解決します。保存x/yが変わらないリサイズにも追従します。未対応・曖昧な場合は既知の中心をサイズ変更中に維持し、保存位置の変化で移動を反映します。この代替経路では起動直後の古い保存中心は保証できません。画面撮影・ウィンドウ名・アクセシビリティ操作・プロセス接続は使いません。旧形式の実測寸法とは分けて扱います。`--anchor-status` にネイティブ座標か保存位置由来かを表示します。
+
+
+リリースの `codex-pet-meter-0.1.1-macos-arm64.zip` はソースZIPとは別のApple silicon用アプリです。Intel版はなく、ad-hoc署名でDeveloper ID署名・公証はされていません。SHA-256チェックサムが付属します。ソースZIPからのインストールには上記のスクリプトを使います。
